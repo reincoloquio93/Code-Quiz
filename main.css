@@ -3,8 +3,9 @@
   }
   
   button {
-    display: inline-block;
+    display: block;
     background-color: #2e003d;
+    margin-left: 500px;
     color: white;
     font-size: 20px;
     padding: 14px 40px;
@@ -20,6 +21,8 @@
 
   #start-game-btn {
     background-color: #2e003d;
+    margin :auto;
+    text-align: center;
   }
 
 
