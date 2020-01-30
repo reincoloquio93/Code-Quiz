@@ -1,91 +1,132 @@
-function Quiz(questions) {
-    this.score = 0;
-    this.questions = questions;
-    this.questionIndex = 0;
-}
+// create variables to reference all DOM elements we're working with
+var timeLeftEl = document.querySelector("#time-left");
+// time-left
+var startScreenEl = document.querySelector("#start-screen");
+// start game button
+var startGameBtnEl = document.querySelector("#start-game-btn");
+// start screen
+var quizContentEl = document.querySelector("#quiz-content");
+// quiz content (event delegation. event listener attach to this)
+var postGameEl = document.querySelector("#post-game-screen");
+// post-game screen
+var userScoreEl = document.querySelector("#user-score");
+// user-score
+var playAgainBtnEl = document.querySelector("#play-again-btn");
+// play again-btn
+var currentQuestionIndex = 0;
 
-Quiz.prototype.getQuestionIndex = function () {
-    return this.questions[this.questionIndex];
-}
+// create variables for game logic
+var timerIntervalId;
+// timerIntervalId
+var score = 0;
 
-Quiz.prototype.guess = function (answer) {
-    if (this.getQuestionIndex().isCorrectAnswer(answer)) {
-        this.score++;
+// score
+// secondsLeft
+var secondsLeft = questions.length * 10;
+var intervalRunning = false
+
+// create function to start game
+function startGame() {
+    secondsLeft = questions.length * 10;
+    // set seconds left variable to starting time (300 seconds = 5 minutes)
+    timeLeftEl.textContent = secondsLeft;
+    // write seconds left to the page
+    userScoreEl.value = userScoreEl.defaultValue;
+
+    // reset score to 0
+    // write score to the page (optional)
+    // set timer interval to setInterval function that decrements secondsLeft every second
+    if (!intervalRunning) {
+        intervalRunning = true;
+        timerIntervalId = setInterval(function () {
+            secondsLeft--;
+            timeLeftEl.textContent = secondsLeft
+            console.log(secondsLeft)
+            if (secondsLeft === 0) {
+
+                stopGame();
+            }
+        }, 1000);
     }
 
-    this.questionIndex++;
+
+    // display first question
+    displayQuestions(0);
 }
 
-Quiz.prototype.isEnded = function () {
-    return this.questionIndex === this.questions.length;
-}
-
-
-function Question(text, choices, answer) {
-    this.text = text;
-    this.choices = choices;
-    this.answer = answer;
-}
-
-Question.prototype.isCorrectAnswer = function (choice) {
-    return this.answer === choice;
-}
-
-
-function populate() {
-    if (quiz.isEnded()) {
-        showScores();
+// create function to display a question and possible choices
+function displayQuestions(questionIndex) {
+    if (questionIndex === questions.length) {
+        // check if questionIndex in questions array doesn't exist
+        return stopGame();
+        // stop game weve hit the last question
     }
-    else {
-        // show question
-        var element = document.getElementById("question");
-        element.innerHTML = quiz.getQuestionIndex().text;
+    var currentQuestion = questions[questionIndex];
+    // initialize question text variable
+    var titleEl = document.getElementById("question-title");
+    // get questions[questionIndex]
+    titleEl.textContent = currentQuestion.questions;
+    // print question to the page
+    var choicesEl = document.getElementById("choices");
+    choicesEl.innerHTML = "";
+    currentQuestion.choices.forEach(function (choice, i) {
+        var choiceButton = document.createElement("button");
+        choiceButton.setAttribute("value", choice);
+        choiceButton.textContent = i + 1 + ". " + choice;
+        choiceButton.onclick = questionClick;
+        choicesEl.appendChild(choiceButton);
+    });
+    // loop through choices and print out choices to the page (make them buttons)
+}
 
-        // show options
-        var choices = quiz.getQuestionIndex().choices;
-        for (var i = 0; i < choices.length; i++) {
-            var element = document.getElementById("choice" + i);
-            element.innerHTML = choices[i];
-            guess("btn" + i, choices[i]);
-        }
-
-        showProgress();
+function questionClick() {
+    if (this.value !== questions[currentQuestionIndex].answer) {
+        alert("Wrong Answer!");
+    } else {
+        alert("You're Right!");
+        score++;
     }
-};
+    currentQuestionIndex++;
+    displayQuestions(currentQuestionIndex);
+}
+// create function to handle user's answering
 
-function guess(id, guess) {
-    var button = document.getElementById(id);
-    button.onclick = function () {
-        quiz.guess(guess);
-        populate();
+function stopGame() {
+    console.log("stopGame");
+    intervalRunning = false;
+    clearInterval(timerIntervalId)
+    quizContentEl.setAttribute("class", "hide");
+    postGameEl.removeAttribute("class");
+    userScoreEl.textContent = score;
+}
+
+// create a function to stop the game (answering all the questions or time has run out)
+// clearInterval() to stop the timer
+// hide quiz-content element
+// show post-game-screen
+// print out user score
+function playAgain() {
+    postGameEl.setAttribute("class", "hide");
+    quizContentEl.removeAttribute("class");
+
+    startGame();
+}
+// start game button (for starting the game)
+
+startGameBtnEl.addEventListener("click", function (event) {
+    var element = event.target;
+    if (element.matches("button") === true) {
+        startScreenEl.setAttribute("class", "hide");
+        // hide start-screen element && post-game-screen
+        quizContentEl.removeAttribute("class");
+        startGame();
     }
-};
+});
 
-
-function showProgress() {
-    var currentQuestionNumber = quiz.questionIndex + 1;
-    var element = document.getElementById("progress");
-    element.innerHTML = "Question " + currentQuestionNumber + " of " + quiz.questions.length;
-};
-
-function showScores() {
-    var gameOverHTML = "<h1>Result</h1>";
-    gameOverHTML += "<h2 id='score'> Your scores: " + quiz.score + "</h2>";
-    var element = document.getElementById("quiz");
-    element.innerHTML = gameOverHTML;
-};
-
-// create questions here
-var questions = [
-    new Question("Commonly used data types DO NOT include?", ["strings", "booleans", "alerts", "numbers"], "alerts"),
-    new Question("The condition in an if / else statement is enclosed within ____.", ["quotes", "curly-brackets", "parentheses", "square brackets"], "parentheses"),
-    new Question("Arrays in JavaScript can be used to store ____.", ["numbers and strings", "other arrays", "booleans", "all of the above"], "all of the above"),
-    new Question("String values must be enclosed within ____ when being assigned to variables.", ["commas", "curly brackets", "quotes", "parentheses"], "quotes"),
-    new Question("A very useful tool used during development and debugging for printing content to the debugger is:", ["Javascript", "terminal/bash", "for loops", "console.log"], "console.log")
-];
-
-// create quiz
-var quiz = new Quiz(questions);
-
-// display quiz
-populate();
+// add event listeners
+startGameBtnEl.addEventListener("click", startGame);
+quizContentEl.addEventListener("click", function (event) {
+    event.preventDefault();
+});
+// play again button
+playAgainBtnEl.addEventListener("click", playAgain);
